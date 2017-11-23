@@ -1,8 +1,11 @@
 package com.demo.aadityak.taskapp;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -13,16 +16,20 @@ import android.widget.FrameLayout;
 import com.demo.aadityak.taskapp.controller.AppController;
 import com.demo.aadityak.taskapp.events.DataFetchedEvent;
 import com.demo.aadityak.taskapp.events.DataRequestEvent;
-import com.demo.aadityak.taskapp.events.MainFragmentReplaceEvent;
+import com.demo.aadityak.taskapp.events.UISwitchEvent;
 import com.demo.aadityak.taskapp.interfaces.UniqueFragmentNaming;
+import com.demo.aadityak.taskapp.views.dialog.SpinkitProgressDialog;
 import com.demo.aadityak.taskapp.views.fragments.BaseFragment;
+import com.demo.aadityak.taskapp.views.fragments.CategoryFragment;
 import com.demo.aadityak.taskapp.views.fragments.HomeFragment;
+import com.demo.aadityak.taskapp.views.fragments.ProductListFragment;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import timber.log.Timber;
 
 /**
  * Created by aadityak on 15/11/2017.
@@ -33,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
     FrameLayout mainFragmentContainer;
 
     AppController appController;
+    SpinkitProgressDialog progressDialogLoading;
+    boolean isShowingProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         appController = new AppController(this);
+
+        progressDialogLoading = new SpinkitProgressDialog();
+        progressDialogLoading.setStyle(DialogFragment.STYLE_NO_FRAME, 0);
 
         listenFragmentChange();
     }
@@ -58,27 +70,61 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Listening Fragment change event to switch UI, if any
+     *
      * @param event
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(MainFragmentReplaceEvent event) {
-        Log.v("mainActivity", "Replacing fragment");
-        replaceMainFragment(event.getFragment(), true, true);
+    public void onEvent(UISwitchEvent event) {
+        uiSwitchEvent(event);
+    }
+
+    public void uiSwitchEvent(UISwitchEvent event) {
+        Bundle bundleArgs = event.getExtras();
+        switch (event.myEventType) {
+
+            case CategoryFragmentLoad:
+                if (bundleArgs != null && bundleArgs.containsKey("parentCategoryId")) {
+                    switchFragment(CategoryFragment.newInstance(bundleArgs.getInt("parentCategoryId")));
+                } else {
+                    switchFragment(CategoryFragment.newInstance());
+                }
+                break;
+
+            case HomePageFragmentLoad:
+                switchFragment(HomeFragment.newInstance(), false);
+                break;
+
+            case ProductFragmentLoad:
+                switchFragment(ProductListFragment.newInstance(bundleArgs.getInt("parentCategoryId")));
+                break;
+
+            default:
+                Timber.e("Don't know how to handle this status event!");
+
+        }
+    }
+
+    public void switchFragment(BaseFragment fragment) {
+        replaceMainFragment(fragment, true, true);
+    }
+
+    public void switchFragment(BaseFragment fragment, boolean addToBack) {
+        replaceMainFragment(fragment, addToBack, true);
     }
 
     /**
      * Listening Data request event, if any
+     *
      * @param event
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(DataRequestEvent event) {
-
         appController.dataRequestEvent(event);
-        //showLoadingDialog();
     }
 
     /**
      * Listening Data fetched event, if any
+     *
      * @param event
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -88,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Handling Intent & action based on params, if any
+     *
      * @param intent
      */
     public void handleIntent(Intent intent) {
@@ -100,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Overriden method responsible for handling new intent launched, if some intent of an app already running
+     *
      * @param intent
      */
     @Override
@@ -120,10 +168,12 @@ public class MainActivity extends AppCompatActivity {
             nextFragment = HomeFragment.newInstance();
         }
         replaceMainFragment(nextFragment, false, false);
+
     }
 
     /**
      * Method handling fragment load, transition & backstack
+     *
      * @param fragment
      * @param addToBack
      * @param addTransitions
@@ -182,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Method can lead to first fragment by clearing fragment backstack
+     *
      * @param allTheWayHome
      */
     public void popBackStack(boolean allTheWayHome) {
@@ -190,6 +241,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Method can lead to first fragment by clearing fragment backstack immediately
+     *
      * @param allTheWayHome
      * @param popImmediate
      */
@@ -234,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Method used for getting current loaded fragment on top of fragment backstack
+     *
      * @return
      */
     @Nullable
@@ -254,13 +307,21 @@ public class MainActivity extends AppCompatActivity {
         manager.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
-                appController.currentFragment = currentTopFragment();
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        appController.currentFragment = currentTopFragment();
+                    }
+                }, 200);
+
             }
         });
     }
 
     /**
      * method just for fetching class name from object
+     *
      * @param object
      * @return
      */
@@ -270,6 +331,64 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
         return object.getClass().getSimpleName();
+    }
+
+    public void showLoadingDialog() {
+        Timber.v("Showing loading dialog");
+        if (progressDialogLoading.isAdded()) {
+            Timber.v("Already added, not doing anything");
+            return;
+        }
+        if (progressDialogLoading.started) {
+            Timber.v("Already started, returning");
+            return;
+        }
+        Dialog actualDialog = progressDialogLoading.getDialog();
+        if (actualDialog != null) {
+            if (actualDialog.isShowing()) {
+                Timber.v("Progress dialog is already showing, not doing anything");
+                return;
+            }
+        }
+        FragmentManager manager = getSupportFragmentManager();
+        Fragment loadingFragment = manager.findFragmentByTag("SPINKITLOADING");
+        if (loadingFragment != null) {
+            Timber.v("Found loading fragment tag, returning");
+            return;
+        }
+        if (isShowingProgressDialog) {
+            Timber.v("Bypassed all framework checks, but found our boolean flag to be set, returning");
+            return;
+        }
+        isShowingProgressDialog = true;
+        try {
+            progressDialogLoading.show(manager, "SPINKITLOADING");
+        } catch (IllegalStateException e) {
+            supportFinishAfterTransition();
+        }
+    }
+
+    public void closeLoadingDialog() {
+        if (!progressDialogLoading.started) {
+            Timber.v("Already stopped, returning");
+            return;
+        }
+        Dialog actualDialog = progressDialogLoading.getDialog();
+        if (actualDialog != null) {
+            if (!actualDialog.isShowing()) {
+                Timber.v("Progress dialog is already hidden, not doing anything");
+                return;
+            }
+        }
+
+        progressDialogLoading.dismissAllowingStateLoss();
+        isShowingProgressDialog = false;
+        Timber.v("Destroyed progress dialog");
+    }
+
+    @Override
+    public void onBackPressed() {
+        popBackStack();
     }
 
     @Override

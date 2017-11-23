@@ -1,12 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/plRecyclerView"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:background="@color/white" />
+        android:layout_marginTop="50dp"
+        android:gravity="center"
+        android:text="Thank you\nfor your interest in my app"
+        android:textColor="@color/black"
+        android:textSize="20dp"/>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="6dp"
+        card_view:cardCornerRadius="4dp"
+        card_view:cardElevation="6dp">
+
+        <LinearLayout
+            android:id="@+id/llProceed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:background="@drawable/home_ripple">
+
+            <TextView
+                android:id="@+id/tvPlName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:textColor="@color/black"
+                android:textSize="20dp"
+                android:text="Start Demo"/>
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
 </RelativeLayout>

@@ -1,4 +1,4 @@
-package com.demo.aadityak.taskapp.services;
+package com.demo.aadityak.taskapp.providers;
 
 import android.os.Bundle;
 
@@ -108,6 +108,7 @@ public class WebDataProvider {
                 @Override
                 public void onFailure(Call<APIResponseData> call, Throwable t) {
                     super.onFailure(call, t);
+                    Timber.e(call.toString());
                     fireAPIResponseError("Something went wrong", "");
 
                 }
@@ -140,8 +141,20 @@ public class WebDataProvider {
             return;
         }
 
-        if (!apiResponseData.isStatus()) {
-            Timber.e("Api response status is not true, returning....");
+        if (apiResponseData.getCategories() == null) {
+            Timber.e("Api response categories is null, returning....");
+            fireAPIResponseError(App.getAppContext().getResources().getString(R.string.internal_server_error), "");
+            return;
+        }
+
+        if (apiResponseData.getCategories().length == 0) {
+            Timber.e("Api response categories array size is 0, returning....");
+            fireAPIResponseError(App.getAppContext().getResources().getString(R.string.internal_server_error), "");
+            return;
+        }
+
+        if (apiResponseData.getRankings() == null) {
+            Timber.e("Api response rankings is null, returning....");
             fireAPIResponseError(App.getAppContext().getResources().getString(R.string.internal_server_error), "");
             return;
         }

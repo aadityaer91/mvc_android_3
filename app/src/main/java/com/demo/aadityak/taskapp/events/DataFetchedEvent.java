@@ -15,7 +15,10 @@ public class DataFetchedEvent extends BaseEvent {
     public enum EventType {
         StatusAPIResponseError,
         StatusAPIResponseSuccess,
-        HomePageDataFetched
+        CategoriesDataFetched,
+        ChildCategoriesDataFetched,
+        ProductListDataFetched,
+        RankingsDataFetched
     }
 
     public DataFetchedEvent(EventType type) {

@@ -8,4 +8,6 @@
     <color name="darkRed">#8B0000</color>
     <color name="green">#00A849</color>
     <color name="colorGrey">#bdbdbd</color>
+    <color name="transparent">#00000000</color>
+    <color name="btn_color">#808080</color>
 </resources>

@@ -11,7 +11,11 @@ public class DataRequestEvent extends BaseEvent {
     public EventType myEventType;
     Bundle extras;
     public enum EventType{
-        RequestProgListData
+        RequestAllData,
+        RequestAllCategories,
+        RequestChildCategories,
+        RequestProductList,
+        RequestAllRankings
 
     }
     public DataRequestEvent(EventType type){

@@ -5,32 +5,27 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.demo.aadityak.taskapp.App;
 import com.demo.aadityak.taskapp.R;
-import com.demo.aadityak.taskapp.services.response.HomePageListItemData;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.demo.aadityak.taskapp.realmStorage.ProductsTable;
 
 import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
-
-import static com.demo.aadityak.taskapp.utils.AppUtils.isValidString;
 
 /**
- * Created by aaditya on 15/11/17.
+ * Created by aaditya on 22/11/17.
  */
 
-public class PLAdapter extends RecyclerView.Adapter<PLAdapter.ViewHolder> {
+public class PLAdapter extends RecyclerView.Adapter<PLAdapter.ViewHolder>{
 
     Context context;
-    ArrayList<HomePageListItemData> plList;
+    ArrayList<ProductsTable> plList;
 
-    public PLAdapter(Context context, ArrayList<HomePageListItemData> plList) {
+    public PLAdapter(Context context, ArrayList<ProductsTable> plList) {
         this.context = context;
         this.plList = plList;
     }
@@ -43,14 +38,9 @@ public class PLAdapter extends RecyclerView.Adapter<PLAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String iconUrl = plList.get(position).getIcon();
-        if (isValidString(iconUrl)) {
-            ImageLoader.getInstance().displayImage(iconUrl, holder.ivIcon, App.defaultDisplayImageOptions());
-        }
-        String plName = plList.get(position).getName();
-        if (isValidString(plName)) {
-            holder.tvPlName.setText(plName);
-        }
+        holder.tvPlName.setText(plList.get(position).getName());
+        holder.tvPlTaxLabel.setText(plList.get(position).getTaxType());
+        holder.tvPlTax.setText(String.valueOf(plList.get(position).getTax()));
     }
 
     @Override
@@ -60,16 +50,17 @@ public class PLAdapter extends RecyclerView.Adapter<PLAdapter.ViewHolder> {
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        @Bind(R.id.ivIcon)
-        ImageView ivIcon;
-
         @Bind(R.id.tvPlName)
         TextView tvPlName;
 
-        @OnClick(R.id.llActualItem)
-        public void plItemClicked(){
+        @Bind(R.id.tvPlTaxLabel)
+        TextView tvPlTaxLabel;
 
-        }
+        @Bind(R.id.tvPlTax)
+        TextView tvPlTax;
+
+        @Bind(R.id.llActualItem)
+        LinearLayout llActualItem;
 
         public ViewHolder(View itemView) {
             super(itemView);
