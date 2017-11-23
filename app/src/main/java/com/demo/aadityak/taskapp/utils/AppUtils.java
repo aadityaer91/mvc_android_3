@@ -54,6 +54,12 @@ public class AppUtils {
         return pojoObject;
     }
 
+    public static String convertPojoToJson(Object obj){
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(obj);
+        return jsonString;
+    }
+
     public static Boolean isValidString(Object string) {
         boolean result = true;
         if (string == null) {

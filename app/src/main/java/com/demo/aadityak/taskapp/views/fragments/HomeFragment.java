@@ -2,42 +2,33 @@ package com.demo.aadityak.taskapp.views.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.demo.aadityak.taskapp.R;
 import com.demo.aadityak.taskapp.events.DataRequestEvent;
-import com.demo.aadityak.taskapp.model.adapter.PLAdapter;
-import com.demo.aadityak.taskapp.services.response.AppResponseData;
-import com.demo.aadityak.taskapp.services.response.HomePageListItemData;
-import com.demo.aadityak.taskapp.services.response.HomePageResponseData;
+import com.demo.aadityak.taskapp.events.UISwitchEvent;
+import com.demo.aadityak.taskapp.interfaces.UniqueFragmentNaming;
+import com.demo.aadityak.taskapp.utils.AppConstants;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import timber.log.Timber;
 
 /**
  * Created by aadityak on 15/11/2017.
  */
 
-public class HomeFragment extends BaseFragment {
+public class HomeFragment extends BaseFragment implements UniqueFragmentNaming{
 
-    @Bind(R.id.plRecyclerView)
-    RecyclerView recyclerView;
-
-    PLAdapter adapter;
-    ArrayList<HomePageListItemData> plList = new ArrayList<>();
-    int currentPage = 1;
-    boolean loading = false;
+    @Bind(R.id.llProceed)
+    LinearLayout llProceed;
 
     public static HomeFragment newInstance() {
 
@@ -52,77 +43,41 @@ public class HomeFragment extends BaseFragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         ButterKnife.bind(this, view);
 
-        initialiseRecyclerView();
-
-        if (plList.size() > 0) {
-            Timber.v("Already have list");
-        } else {
-            requiredDataForList(currentPage);
-        }
-
         return view;
     }
 
-    void initialiseRecyclerView() {
-        adapter = new PLAdapter(getContext(), plList);
-        final LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setAdapter(adapter);
-
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                int totalItemCount = linearLayoutManager.getChildCount();
-                int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
-
-                if (!loading && lastVisibleItem >= totalItemCount - 1) {
-                    loading = true;
-                    requiredDataForList(++currentPage);
-                }
-            }
-
-        });
-
+    @OnClick(R.id.llProceed)
+    public void proceedClicked(){
+        llProceed.setClickable(false);
+        requiredDataForList();
     }
 
-    void requiredDataForList(int pageNumber) {
+
+    void requiredDataForList() {
         Bundle bundle = new Bundle();
-        bundle.putString("pageNumber", String.valueOf(pageNumber));
-        EventBus.getDefault().post(new DataRequestEvent(DataRequestEvent.EventType.RequestProgListData, bundle));
+        bundle.putString("action", AppConstants.ActionApiData);
+        EventBus.getDefault().post(new DataRequestEvent(DataRequestEvent.EventType.RequestAllData, bundle));
     }
 
     @Override
-    public void updateData(AppResponseData appResponseData, String action) {
-        if (appResponseData instanceof HomePageResponseData) {
-            HomePageListItemData[] homePageListItemData = ((HomePageResponseData) appResponseData).getItems();
-            if (homePageListItemData != null && homePageListItemData.length > 0) {
-                plList.addAll(Arrays.asList(homePageListItemData));
-                if(plList.size()<10) {
-                    adapter.notifyDataSetChanged();
-                }else{
-                    adapter.notifyItemRangeInserted(plList.size(),homePageListItemData.length);
-                }
-                if (currentPage == ((HomePageResponseData) appResponseData).getTotalPages()) {
-                    loading = true;
-                } else {
-                    loading = false;
-                }
-            }
+    public void updateData(Object appResponseData, String action) {
+
+    }
+
+    @Override
+    public void updateSuccess(Bundle bundle) {
+        String action= bundle.getString("action");
+        llProceed.setClickable(true);
+        if(action.equalsIgnoreCase(AppConstants.ActionApiData)){
+            Timber.v("API data fetched");
+            EventBus.getDefault().post(new UISwitchEvent(UISwitchEvent.EventType.CategoryFragmentLoad));
         }
     }
 
     @Override
     public void updateError(Bundle bundle) {
         Toast.makeText(getContext(), bundle.getString("message"), Toast.LENGTH_SHORT).show();
-        loading = false;
+        llProceed.setClickable(true);
     }
 
     @Override

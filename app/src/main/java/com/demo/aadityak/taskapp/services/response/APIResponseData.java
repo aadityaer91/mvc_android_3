@@ -7,24 +7,17 @@ import com.google.gson.annotations.SerializedName;
  */
 public class APIResponseData {
 
-    @SerializedName("success")
-    private boolean status;
+    @SerializedName("categories")
+    private Category []categories;
 
-    @SerializedName("authenticated")
-    private boolean authenticated;
+    @SerializedName("rankings")
+    private Ranking []rankings;
 
-    @SerializedName("response")
-    private Object data;
-
-    public boolean isStatus() {
-        return status;
+    public Category[] getCategories() {
+        return categories;
     }
 
-    public boolean isAuthenticated() {
-        return authenticated;
-    }
-
-    public Object getData() {
-        return data;
+    public Ranking[] getRankings() {
+        return rankings;
     }
 }

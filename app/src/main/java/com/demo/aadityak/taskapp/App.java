@@ -10,6 +10,8 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import io.realm.Realm;
+
 /**
  * Created by aadityak on 15/11/2017.
  */
@@ -24,7 +26,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         mContext = this;
-
+        Realm.init(this);
         ImageLoader.getInstance().init(ImageLoaderConfiguration.createDefault(this));
         imageDisplayOptions = new DisplayImageOptions.Builder()
                 .cacheOnDisk(true)
